@@ -7,6 +7,7 @@ import akka.testkit.{ TestKit, TestProbe }
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import Greeter._
+import Goodbyer._
 import Printer._
 
 //#test-classes
@@ -38,5 +39,18 @@ class AkkaQuickstartSpec(_system: ActorSystem)
     }
   }
   //#first-test
+
+  "A Goodbyer Actor" should {
+    "pass on a goodbye message when instructed to" in {
+      //#specification-example
+      val testProbe = TestProbe()
+      val goodbyeMessage = "Auf wiedersehen"
+      val goodbyer = system.actorOf(Goodbyer.props(goodbyeMessage, testProbe.ref))
+      val goodbyePerson = "Peter"
+      goodbyer ! WhoToGoodbye(goodbyePerson)
+      goodbyer ! Goodbye
+      testProbe.expectMsg(500 millis, GoodbyeMessage(goodbyeMessage + ", " + goodbyePerson))
+    }
+  }
 }
 //#full-example
