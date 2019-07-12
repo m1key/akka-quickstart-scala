@@ -1,7 +1,7 @@
 //#full-example
 package com.example
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 
 //#greeter-companion
 //#greeter-messages
@@ -40,6 +40,8 @@ object Printer {
   def props: Props = Props[Printer]
   //#printer-messages
   final case class Greeting(greeting: String)
+  //#printer-messages
+  final case class GoodbyeMessage(goodbyeMessage: String)
 }
 //#printer-messages
 //#printer-companion
@@ -51,13 +53,47 @@ class Printer extends Actor with ActorLogging {
   def receive = {
     case Greeting(greeting) =>
       log.info("Greeting received (from " + sender() + "): " + greeting)
+    case GoodbyeMessage(goodbyeMessage) =>
+      log.info("Goodbye received (from " + sender() + "): " + goodbyeMessage)
   }
 }
 //#printer-actor
 
+
+//#goodbyer-companion
+//#goodbyer-messages
+object Goodbyer {
+  //#goodbyer-messages
+  def props(message: String, printerActor: ActorRef): Props = Props(new Goodbyer(message, printerActor))
+  //#greeter-messages
+  final case class WhoToGoodbye(who: String)
+  case object Goodbye
+}
+//#greeter-messages
+//#greeter-companion
+
+//#greeter-actor
+class Goodbyer(message: String, printerActor: ActorRef) extends Actor {
+  import Goodbyer._
+  import Printer._
+
+  var goodbyeMessage = ""
+
+  def receive = {
+    case WhoToGoodbye(who) =>
+      goodbyeMessage = message + ", " + who
+    case Goodbye           =>
+      //#greeter-send-message
+      printerActor ! GoodbyeMessage(goodbyeMessage)
+    //#greeter-send-message
+  }
+}
+//#greeter-actor
+
 //#main-class
 object AkkaQuickstart extends App {
   import Greeter._
+  import Goodbyer._
 
   // Create the 'helloAkka' actor system
   val system: ActorSystem = ActorSystem("helloAkka")
@@ -73,6 +109,10 @@ object AkkaQuickstart extends App {
     system.actorOf(Greeter.props("Hello", printer), "helloGreeter")
   val goodDayGreeter: ActorRef =
     system.actorOf(Greeter.props("Good day", printer), "goodDayGreeter")
+
+  // Create the 'goodbyer' actors
+  val italianGoodbyer: ActorRef =
+    system.actorOf(Goodbyer.props("Ciao", printer), "italianGoodbyer")
   //#create-actors
 
   //#main-send-messages
@@ -87,6 +127,9 @@ object AkkaQuickstart extends App {
 
   goodDayGreeter ! WhoToGreet("Play")
   goodDayGreeter ! Greet
+
+  italianGoodbyer ! WhoToGoodbye("Mario")
+  italianGoodbyer ! Goodbye
   //#main-send-messages
 }
 //#main-class
