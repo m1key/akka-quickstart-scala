@@ -1,16 +1,17 @@
 package com.example
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
+import com.example.Udemy_3_10_1.CounterActor.{Decrement, Increment, Print}
 
 object Udemy_3_10_1 extends App {
 
-  case class Increment()
-  case class Decrement()
-  case class Print()
+  class CounterActor() extends Actor {
+    import CounterActor._
 
-  class CounterActor(private var value: Int) extends Actor {
+    var value: Int = 0
 
     override def receive: Receive = {
+
       case Increment => value += 1
       case Decrement => value -= 1
       case Print => println(value)
@@ -18,11 +19,13 @@ object Udemy_3_10_1 extends App {
   }
 
   object CounterActor {
-    def props(value: Int): Props = Props(new CounterActor(value))
+    case object Increment
+    case object Decrement
+    case object Print
   }
 
   val system = ActorSystem("Udemy_3_10_1")
-  val counterActor = system.actorOf(CounterActor.props(10))
+  val counterActor = system.actorOf(Props[CounterActor])
 
   counterActor ! Increment
   counterActor ! Increment
