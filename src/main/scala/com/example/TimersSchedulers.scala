@@ -2,6 +2,8 @@ package com.example
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 
+import scala.language.postfixOps
+
 object TimersSchedulers extends App {
 
   class SimpleActor extends Actor with ActorLogging {
